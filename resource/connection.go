@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 	"sync"
 	"tutorials/dynamic_db_conn_project/config"
 	"tutorials/dynamic_db_conn_project/constants"
@@ -24,20 +25,18 @@ func Connect() *sql.DB {
 
 		//dynamic db connection
 		//cockroach db connection
-		if Conf.DB_CONNECTION == constants.COCKROACH_DB {
+		if Conf.DB_TYPE == constants.COCKROACH_DB {
 			dbConn, err = sql.Open("postgres", Conf.COCKROACH_DB_URL)
 			if err != nil {
 				log.Fatal(err)
 			}
-		} else if Conf.DB_CONNECTION == constants.SQLITE_DB {
+		} else if Conf.DB_TYPE == constants.SQLITE_DB {
 			//sqlite db connection
 			dbConn, err = sqliteConnection()
 			if err != nil {
 				log.Fatal(err)
 			}
-		} else {
-			log.Fatal("Invalid DB Connection")
-		}
+		} 
 
 		err = dbConn.Ping()
 		if err != nil {
@@ -49,8 +48,10 @@ func Connect() *sql.DB {
 }
 
 func sqliteConnection() (*sql.DB, error) {
-
-	db, err := sql.Open("sqlite3", ":memory:")
+	//file based sqlite db
+	//db, err := sql.Open("sqlite3", "test.db")
+	os.Create("/sqlitedb/dynamic_sqlite.db")
+	db, err := sql.Open("sqlite3", "./sqlitedb/dynamic_sqlite.db")
 	if err != nil {
 		log.Fatal(err)
 	}

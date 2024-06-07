@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"path"
+	"tutorials/dynamic_db_conn_project/constants"
 
 	"github.com/spf13/viper"
 )
@@ -12,9 +13,29 @@ var Conf Config
 
 type Config struct {
 	Port          string `mapstructure:"PORT"`
-	DB_CONNECTION string `mapstructure:"DB_CONNECTION"`
+	DB_TYPE string `mapstructure:"DB_TYPE"`
 	COCKROACH_DB_URL string `mapstructure:"COCKROACH_DB_URL"`
 }
+
+
+// Define a custom "DbType" type to represent the enum
+type DbType string
+
+const (
+  DbTypeSqlite  DbType = constants.SQLITE_DB
+  DbTypeCockroach DbType = constants.COCKROACH_DB
+)
+
+// Validation function to check if the value matches a valid DbType
+func isValidDbType(value string) bool {
+	for _, dt := range []DbType{DbTypeSqlite, DbTypeCockroach} {
+	  if value == string(dt) {
+		return true
+	  }
+	}
+	return false
+  }
+  
 
 func Load() (Config, error) {
 
@@ -40,6 +61,11 @@ func Load() (Config, error) {
 
 	if err := viper.Unmarshal(&Conf); err != nil {
 		return Config{}, err
+	}
+
+	// Validate the DB_TYPE value
+	if !isValidDbType(string(Conf.DB_TYPE)) {
+		return Config{}, fmt.Errorf("invalid DB_TYPE value: %s", Conf.DB_TYPE)
 	}
 
 	return Conf, err
